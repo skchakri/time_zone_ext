@@ -23,17 +23,23 @@ module TimeZoneExt
   # English month names based on the locale passed .
   # https://github.com/karnov/i18n-date
   def unlocalize_date_string(string, locale = nil)
-      locale ||= I18n.config.locale
-      I18n.enforce_available_locales!(locale)
-      CONVERTIONS.reduce(string) do |s, (type, replacements)|
-        tmp_array = Array.new
-        date_map = {}
-        map = I18n.t(type, scope: "date", locale: locale)
-        map.each { |r| tmp_array.push(r.to_s.gsub('.','')) }
-        map = tmp_array.zip(replacements).to_h.tap { |h| h.delete("") }
-        map.collect{|k , v| s.include?(k) ? date_map.merge!({s.split(' ', 2).first => v}) :  date_map.merge!({k =>  v})}
-        s.gsub(/\b(#{date_map.keys.join("|") })\b/) {|match| date_map[match] }
+    locale ||= I18n.config.locale
+    I18n.enforce_available_locales!(locale)
+    CONVERTIONS.reduce(string) do |s, (type, replacements)|
+      tmp_array = Array.new
+      date_map = {}
+      map = I18n.t(type, scope: "date", locale: locale)
+      map.each { |r| tmp_array.push(r.to_s.gsub('.','')) }
+      map = tmp_array.zip(replacements).to_h.tap { |h| h.delete("") }
+      map.collect do |k , v|
+        if s.sub("zone", "").include?(k)
+          date_map.merge!({s.split(' ', 2).first => v})
+        else
+          date_map.merge!({k =>  v})
+        end
       end
+      s.gsub(/\b(#{date_map.keys.join("|") })\b/) {|match| date_map[match] }
+    end
   end
 
   CONVERTIONS = {
