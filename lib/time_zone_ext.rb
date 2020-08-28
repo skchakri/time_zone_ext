@@ -39,6 +39,7 @@ module TimeZoneExt
         end
       end
       s.gsub(/\b(#{date_map.keys.join("|") })\b/) {|match| date_map[match] }
+      s
     end
   end
 
